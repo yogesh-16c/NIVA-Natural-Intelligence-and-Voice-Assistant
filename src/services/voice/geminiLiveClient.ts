@@ -139,19 +139,43 @@ class GeminiLiveClient {
       this.connectionPromise = new Promise<GeminiLiveSessionInfo>((resolve, reject) => {
         this.connectResolver = resolve;
         this.connectRejecter = reject;
+this.socket = new WebSocket(liveUrl);
 
-        this.socket = new WebSocket(liveUrl);
+// Gemini Live can deliver JSON messages as binary WebSocket frames.
+this.socket.binaryType = 'arraybuffer';
 
-        this.socket.onopen = () => {
-          this.clearReconnectTimer();
-          this.state = 'connected';
-          this.callbacks.onStateChange?.(this.state);
-          this.sendSetup();
-        };
+this.socket.onopen = () => {
+  this.clearReconnectTimer();
+  this.state = 'connected';
+  this.callbacks.onStateChange?.(this.state);
+  this.sendSetup();
+};
 
-        this.socket.onmessage = (event) => {
-          this.handleSocketMessage(event.data);
-        };
+this.socket.onmessage = async (event) => {
+  try {
+    let rawMessage: string;
+
+    if (typeof event.data === 'string') {
+      rawMessage = event.data;
+    } else if (event.data instanceof ArrayBuffer) {
+      rawMessage = new TextDecoder().decode(event.data);
+    } else if (event.data instanceof Blob) {
+      rawMessage = await event.data.text();
+    } else {
+      throw new Error('Unsupported Gemini Live WebSocket message type.');
+    }
+
+    this.handleSocketMessage(rawMessage);
+  } catch (error) {
+    console.error('Gemini Live message processing error:', error);
+
+    this.callbacks.onError?.(
+      error instanceof Error
+        ? error.message
+        : 'Failed to process Gemini Live message.',
+    );
+  }
+};
 
         this.socket.onerror = () => {
           this.state = 'error';
