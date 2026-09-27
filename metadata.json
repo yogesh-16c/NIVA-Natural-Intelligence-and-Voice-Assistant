@@ -1,0 +1,6 @@
+{
+  "name": "NIVA — Voice-First AI Workspace",
+  "description": "A calm, intelligent voice-first AI workspace for real-time conversation, deep research, tool execution, and safe browser actions in English, Hindi, and Marathi.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
