@@ -426,7 +426,7 @@ const source = audioContext.createMediaStreamSource(stream);
           },
         },
         {
-         {
+         
   name: 'open_website',
   description:
     'Open an allowlisted website for the user. MUST be called when the user directly asks NIVA to open, launch, or go to a supported website such as YouTube, Instagram, or Google. Do not tell the user to open the website themselves when this tool can perform the action.',
