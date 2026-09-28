@@ -95,8 +95,11 @@ class ApiClient {
 
   private async request<T>(path: string, init: RequestInit = {}, body?: unknown): Promise<T> {
     const headers = new Headers(init.headers ?? {});
-    const isAuthEndpoint = path === '/auth/login' || path === '/auth/signup' || path === '/auth/me';
-    const token = !isAuthEndpoint ? this.getStoredToken() : null;
+    const isPublicAuthEndpoint =
+  path === '/auth/login' ||
+  path === '/auth/signup';
+
+const token = isPublicAuthEndpoint ? null : this.getStoredToken();
 
     if (body !== undefined && !headers.has('Content-Type')) {
       headers.set('Content-Type', 'application/json');
@@ -120,7 +123,7 @@ class ApiClient {
         // ignore malformed error bodies; keep a generic message below
       }
 
-      if (response.status === 401 && !isAuthEndpoint) {
+      if (response.status === 401 && !isPublicAuthEndpoint ) {
         clearAuthState();
       }
 
