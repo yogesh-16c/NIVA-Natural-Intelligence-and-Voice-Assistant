@@ -105,11 +105,10 @@ class SpeechService {
     this.callbacks = cbs;
   }
 
-  public setLanguage(lang: SupportedLanguage) {
-    this.currentLanguage = lang;
-    geminiLiveClient.setLanguage(lang);
-  }
-
+  public async setLanguage(lang: SupportedLanguage): Promise<void> {
+  this.currentLanguage = lang;
+  await geminiLiveClient.setLanguage(lang);
+}
   public setPreferences(autoSpeak: boolean, bargeIn: boolean) {
     this.autoSpeak = autoSpeak;
     this.bargeInEnabled = bargeIn;
