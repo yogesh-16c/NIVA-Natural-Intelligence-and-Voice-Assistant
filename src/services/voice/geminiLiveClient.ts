@@ -219,7 +219,25 @@ this.socket.onmessage = async (event) => {
       throw error;
     }
   }
+  private async ensureAudioOutput(): Promise<void> {
+    const AudioCtor =
+      window.AudioContext ||
+      (window as typeof window & {
+        webkitAudioContext?: typeof AudioContext;
+      }).webkitAudioContext;
 
+    if (!AudioCtor) {
+      throw new Error('Web Audio is not available in this browser.');
+    }
+
+    if (!this.audioContext) {
+      this.audioContext = new AudioCtor();
+    }
+
+    if (this.audioContext.state === 'suspended') {
+      await this.audioContext.resume();
+    }
+  }
   async startMicrophone(): Promise<void> {
     if (!this.setupComplete) {
       throw new Error('Gemini Live setup is not complete yet.');
@@ -247,19 +265,12 @@ this.socket.onmessage = async (event) => {
 
       this.mediaStream = stream;
 
-      const AudioCtor = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-      if (!AudioCtor) {
-        throw new Error('Web Audio is not available in this browser.');
+      await this.ensureAudioOutput();
+
+      const audioContext = this.audioContext;
+      if (!audioContext) {
+        throw new Error('Audio output is not available.');
       }
-
-      const audioContext = new AudioCtor();
-
-if (audioContext.state === 'suspended') {
-  await audioContext.resume();
-}
-
-this.audioContext = audioContext;
-
 const source = audioContext.createMediaStreamSource(stream);
       const processor = audioContext.createScriptProcessor(2048, 1, 1);
       const silentGain = audioContext.createGain();
@@ -315,10 +326,6 @@ const source = audioContext.createMediaStreamSource(stream);
     if (this.mediaStream) {
       this.mediaStream.getTracks().forEach((track) => track.stop());
       this.mediaStream = null;
-    }
-    if (this.audioContext) {
-      void this.audioContext.close();
-      this.audioContext = null;
     }
   }
 
@@ -799,13 +806,17 @@ private handleSocketMessage(rawMessage: string): void {
     return bytes;
   }
 
-  private queueDecodedAudio(chunk: Uint8Array): void {
-    if (!chunk.length || !this.audioContext) {
+    private queueDecodedAudio(chunk: Uint8Array): void {
+    if (!chunk.length) {
       return;
     }
 
-    this.queuedAudio.push({ chunk, generation: this.currentPlaybackGeneration });
-    void this.playQueuedAudio();
+    this.queuedAudio.push({
+      chunk,
+      generation: this.currentPlaybackGeneration,
+    });
+
+    void this.ensureAudioOutput().then(() => this.playQueuedAudio());
   }
 
   private async playQueuedAudio(): Promise<void> {
