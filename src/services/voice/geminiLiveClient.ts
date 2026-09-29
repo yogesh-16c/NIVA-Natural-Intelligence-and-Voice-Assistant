@@ -79,9 +79,31 @@ class GeminiLiveClient {
     };
   }
 
-  setLanguage(language: 'en' | 'hi' | 'mr'): void {
-    this.currentLanguage = language;
+ async setLanguage(language: 'en' | 'hi' | 'mr'): Promise<void> {
+  const wasListening = Boolean(this.mediaStream);
+
+  this.currentLanguage = language;
+
+  // If Live is not active, the new language will be used
+  // when the next Live session starts.
+  if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+    return;
   }
+
+  // Restart the Live session so the new language is included
+  // in the new setup message.
+  this.disconnect();
+
+  await this.connect(
+    undefined,
+    undefined,
+    language,
+  );
+
+  if (wasListening) {
+    await this.startMicrophone();
+  }
+}
 
   async requestToken(sessionId?: string, model?: string): Promise<GeminiLiveSessionInfo> {
     this.state = 'requesting-token';
