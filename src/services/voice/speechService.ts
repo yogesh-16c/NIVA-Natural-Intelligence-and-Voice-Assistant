@@ -172,9 +172,9 @@ class SpeechService {
   }
 
   public speak(text: string, voiceId?: string): Promise<void> {
-    if (!this.autoSpeak || this.isListening || this.isSpeaking || geminiLiveClient.getConnectionState() === 'connected') {
-      return Promise.resolve();
-    }
+  if (!this.autoSpeak || this.isListening || this.isSpeaking) {
+  return Promise.resolve();
+}
 
     if (typeof window === 'undefined' || !window.speechSynthesis) {
       return Promise.resolve();
