@@ -387,10 +387,10 @@ export const AssistantProvider: React.FC<{ children: ReactNode }> = ({ children 
     speechService.setPreferences(autoSpeak, bargeIn);
   }, [currentLanguage, autoSpeak, bargeIn, processUserInput]);
 
-  const setLanguage = (lang: SupportedLanguage) => {
-    setCurrentLanguageState(lang);
-    speechService.setLanguage(lang);
-  };
+ const setLanguage = async (lang: SupportedLanguage) => {
+  setCurrentLanguageState(lang);
+  await speechService.setLanguage(lang);
+};
 
   const setAutoSpeak = (val: boolean) => {
     setAutoSpeakState(val);
